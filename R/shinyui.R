@@ -186,14 +186,7 @@ renderPage <- function(ui, connection, showcase=0) {
   # write preamble
   writeLines(c('<!DOCTYPE html>',
                '<html>',
-               '<head>',
-               '  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>',
-               '  <script src="shared/jquery.js" type="text/javascript"></script>',
-               '  <script src="shared/shiny.js" type="text/javascript"></script>',
-               '  <link rel="stylesheet" type="text/css" href="shared/shiny.css"/>',
-               sprintf('  <script type="application/shiny-singletons">%s</script>',
-                       paste(result$singletons, collapse = ',')
-               )),
+               shinyHead(result$singletons)),
               con = connection)
   if (showcase > 0) {
     writeLines(as.character(showcaseHead()), con = connection)
@@ -217,6 +210,16 @@ renderPage <- function(ui, connection, showcase=0) {
   writeLines(c('</body>',
                '</html>'),
              con = connection)
+}
+
+shinyHead <- function(singletons = NULL, charset = TRUE, jquery = TRUE) {
+  c(if (charset) '  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>',
+    if (jquery) '  <script src="shared/jquery.js" type="text/javascript"></script>',
+    '  <script src="shared/shiny.js" type="text/javascript"></script>',
+    '  <link rel="stylesheet" type="text/css" href="shared/shiny.css"/>',
+    sprintf('  <script type="application/shiny-singletons">%s</script>',
+            paste(singletons, collapse = ',')
+    ))
 }
 
 #' Create a Shiny UI handler
