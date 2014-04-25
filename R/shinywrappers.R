@@ -545,6 +545,55 @@ renderDataTable <- function(expr, options = NULL, searchDelay = 500,
   })
 }
 
+#' Signal a custom type of error when the input values do not satisfy the output
+#' rendering function
+#'
+#' For an output rendering function (e.g. \code{\link{renderPlot}()}), we may
+#' need to check certain input values before we can render the output. If the
+#' input values do not satisfy the rendering function, we can siginal an error
+#' to indicate this special situation.
+#' @param ... A list of arguments, and each argument takes a list of length 2:
+#'   the first element of the list is an error message (a character vector), and
+#'   the second element is the condition on which the rendering function should
+#'   stop (the condition returns \code{TRUE} or \code{FALSE}, and this function
+#'   stops when the condition is \code{TRUE})
+#' @export
+#' @examples
+#' # in ui.R
+#' fluidPage(
+#'   checkboxGroupInput('foo', 'Check some letters', choices = head(LETTERS)),
+#'   selectizeInput('bar', 'Select a state', choices = state.name),
+#'   plotOutput('plot')
+#' )
+#'
+#' # in server.R
+#' function(input, output) {
+#'   output$plot <- renderPlot({
+#'     renderError(
+#'       list(message = 'Check at least one letter!', condition = is.null(input$foo)),
+#'       list(message = 'Please choose a state.', condition = input$bar == '')
+#'     )
+#'     plot(1:10, main = paste(c(input$bar, input$foo), collapse = ', '))
+#'   })
+#' }
+renderError <- function(...) {
+  ll <- list(...)
+  if (length(ll) == 0)
+    return()  # perhaps should stop(); it does not make sense
+  if (!all(sapply(ll, function(x) {
+    is.list(x) && length(x) == 2 && is.character(x[[1]]) && is.logical(x[[2]])
+  }))) stop('All arguments of renderError() must be lists of length 2, ',
+           'and each list has a first character element and a second logical element')
+
+  msg <- list()
+  for (r in ll) if (r[[2]]) msg[[length(msg) + 1]] <- r[[1]]
+  msg <- unlist(msg)
+  if (length(msg)) {
+    err <- simpleError(paste(msg, collapse = '\n'))
+    attr(err, 'type') <- 'shinyUnsatisfiedDependencies'
+    stop(err)
+  }
+}
 
 # Deprecated functions ------------------------------------------------------
 

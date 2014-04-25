@@ -1061,7 +1061,9 @@
       this.renderError(el, err);
     };
     this.renderError = function(el, err) {
-      $(el).addClass('shiny-output-error').text(err.message);
+      var errClass = err.type === 'shinyUnsatisfiedDependencies' ?
+                                  'alert' : 'shiny-output-error';
+      $(el).addClass(errClass).text(err.message);
     };
     this.clearError = function(el) {
       $(el).removeClass('shiny-output-error');
